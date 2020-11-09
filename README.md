@@ -35,4 +35,14 @@ EMV with its built in security allows for more secure transactions. EMV can supp
 
 Having said that, it becomes vital to know what kind of cards we are supporting. Omni-payment channel is never an easy exercise to do. Especially when working with EMV payment flows, each card issuer has their own integration schemes. 
 
-The proposed solution must also be PCI compliant. While integrating with Visa / mastercard through Magnetic Stripe, it is less secure to do that. Fully supporting Visa and MasterCard is a huge endeavor and a potentially great way of differentiating our product from any other competitor. Ultimately, EMV chip integration is the industry standard when processing payments. 
+The proposed solution must also be PCI compliant. While integrating with Visa / mastercard through Magnetic Stripe, it is less secure to do that. Fully supporting Visa and MasterCard is a huge endeavor and a potentially great way of differentiating our product from any other competitor. Ultimately, EMV chip integration is the industry standard when processing payments.
+
+
+### Implementation plan
+
+Developing for Visa and mastercard esp. if seprately is a non-trivial endeavor. It gets even more complex when dealing with EMV-based Visa/MasterCard transactions. It requires thorough studying for the requirements and higher level of committment and dedication. We will also be the first company to ever launch a similar product in Sudan and being a pioneer is not easy.
+
+In short, we want the following documents:
+
+- Integration documents (from EnayaTech partners)
+- EMVCo. documentations regarding EMV-based chip payment (if available)
