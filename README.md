@@ -46,3 +46,37 @@ In short, we want the following documents:
 
 - Integration documents (from EnayaTech partners)
 - EMVCo. documentations regarding EMV-based chip payment (if available)
+
+
+### Android vs. Linux
+
+Developing for Android is usually far more easier than for Linux (C). It is easier to find android developers than to find C developers (or embedded system engineers). However, Linux POS are usually more stable, has better lifetime and rugged enough to be used in variety of situations. They also tend to have a better battery support (and better battery management). 
+
+Choosing between Linux vs. Android is a bit hard and is subject to different factors:
+
+
+#### Android POS Pros
+
+- Android POS are easier to develop and debug
+- Android POS has better user experience
+- They are actually android devices so they don't need much re-learning from merchants
+
+#### Android POS Cons
+
+- Are more fragile and easier to break
+- Terrible battery life
+
+
+#### Linux POS Pros
+
+- More stable and bullet tested
+- Better lifetime and more prone to bad usage
+- Rugged and can be very hard to break
+- They are easier to fix and their spare parts are cheap
+
+#### Linux POS Cons
+
+- More difficult in development
+
+
+**Both Linux and Android POS are as secure and they are both PCI and EMV certified**
