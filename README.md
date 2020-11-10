@@ -11,11 +11,11 @@ Noebs is an open source payment gateway that connects to EBS channels through Co
 
 _or payment primiere_
 
-Noebs is connected to EBS via an HTTP / RESTful apis for both consumer and merchant. EBS merchant and consumer are a wraper built on top of their TWO (TanzWare Online Switch System). 
+Noebs is connected to EBS via an HTTP / RESTful apis for both consumer and merchant. EBS merchant and consumer are a wraper built on top of their TWO (TranzWare Online Switch System). 
 
 Noebs and likewise EBS is also only Magnetic Card (MagCard) compatible, they don't use nor support EMV based transactions. MagCard are very easy and simple to implement, essentially what we do is just sending PAN, PIN, expDate. The card in itself doesn't provide any mechanism for security. 
 
-EMV has built-in security features that makes it impossible for counterfeit frauds. In MagCard, we cannot guarantee a transaction originated from the genunie card--we can only hope for that. The security in the MagCard is in:
+EMV has built-in security features that makes it impossible for counterfeit frauds. In MagCard, we cannot guarantee a transaction originated from the genuine card--we can only hope for that. The security in the MagCard is in:
     - PAN
     - PIN
     - ExpDate
