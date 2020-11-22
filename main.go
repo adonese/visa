@@ -59,14 +59,6 @@ func Purchase(w http.ResponseWriter, r *http.Request) {
 	var fields ebs_fields.PurchaseFields
 	w.Header().Add("content-type", "application/json")
 
-	successfull := map[string]ebs_fields.GenericEBSResponseFields{
-		"ebs_response": generateError(fields, "Successful", 0),
-	}
-	log.Printf("The response is: %v", string(toJSON(successfull)))
-	w.WriteHeader(http.StatusOK)
-	w.Write(toJSON(successfull))
-	return
-
 	req, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 
@@ -172,17 +164,12 @@ func Purchase(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Successfull response here
-	// successfull := map[string]ebs_fields.GenericEBSResponseFields{
-	// 	"ebs_response": {
-	// 		ResponseMessage: "Approval",
-	// 		ResponseCode:    0,
-	// 		ResponseStatus:  "Successfull",
-	// 	},
-	// }
-	// log.Printf("The response is: %v", string(toJSON(successfull)))
-	// w.WriteHeader(http.StatusOK)
-	// w.Write(toJSON(successfull))
+	successfull := map[string]ebs_fields.GenericEBSResponseFields{
+		"ebs_response": generateError(fields, "Successful", 0),
+	}
+	log.Printf("The response is: %v", string(toJSON(successfull)))
+	w.WriteHeader(http.StatusOK)
+	w.Write(toJSON(successfull))
 
 }
 
