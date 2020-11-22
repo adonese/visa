@@ -184,6 +184,9 @@ func toJSON(d interface{}) []byte {
 
 func parseStripe(res string) string {
 	idx := strings.Index(res, ": ")
+	if idx == -1 {
+		return res
+	}
 	return res[idx+2:]
 }
 

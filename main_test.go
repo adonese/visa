@@ -39,6 +39,7 @@ func Test_parseStripe(t *testing.T) {
 		want string
 	}{
 		{"parse successfull", args{res: "Request req_sj1ekhBbk31Aq2: This value must be greater than or equal to 1."}, "This value must be greater than or equal to 1."},
+		{"parse successfull", args{res: "Request req_sj1ekhBbk31Aq2-- This value must be greater than or equal to 1."}, "Request req_sj1ekhBbk31Aq2-- This value must be greater than or equal to 1."},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
