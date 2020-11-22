@@ -59,11 +59,7 @@ func Purchase(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("content-type", "application/json")
 
 	successfull := map[string]ebs_fields.GenericEBSResponseFields{
-		"ebs_response": {
-			ResponseMessage: "Approval",
-			ResponseCode:    0,
-			ResponseStatus:  "Successfull",
-		},
+		"ebs_response": generateError(fields, "Successfull", 0),
 	}
 	log.Printf("The response is: %v", string(toJSON(successfull)))
 	w.WriteHeader(http.StatusOK)
