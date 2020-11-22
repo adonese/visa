@@ -92,7 +92,7 @@ func Purchase(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// CVV gonnaa be pin[1:]
-	stripe := Stripe{PAN: fields.Pan, Amount: int(fields.TranAmount), CVV: pin[1:], ExpDate: fields.Expdate}
+	stripe := Stripe{PAN: fields.Pan, Amount: int(fields.TranAmount), CVV: pin[:3], ExpDate: fields.Expdate}
 	payment, err := json.Marshal(&stripe)
 
 	log.Printf("Request to Stripe: %v", string(payment))
