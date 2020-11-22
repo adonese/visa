@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"strings"
 
 	"github.com/adonese/noebs/ebs_fields"
 )
@@ -155,12 +156,15 @@ func Purchase(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if res.StatusCode == http.StatusBadRequest {
-		log.Printf("the response is: %v", string(resData))
-		verr := ebs_fields.ErrorDetails{Message: "EBS Error", Code: 600, Details: generateError(fields, "Failed", response["messege"], 600)}
-		log.Printf("The response is: %v", string(toJSON(verr)))
-		w.WriteHeader(http.StatusBadGateway)
-		w.Write(toJSON(verr))
-		return
+		if v, ok := response["messege"]; ok {
+			log.Printf("the response is: %v", string(resData))
+			verr := ebs_fields.ErrorDetails{Message: "EBS Error", Code: 600, Details: generateError(fields, "Failed", parseStripe(v), 600)}
+			log.Printf("The response is: %v", string(toJSON(verr)))
+			w.WriteHeader(http.StatusBadGateway)
+			w.Write(toJSON(verr))
+			return
+		}
+
 	}
 
 	successfull := map[string]ebs_fields.GenericEBSResponseFields{
@@ -176,6 +180,11 @@ func toJSON(d interface{}) []byte {
 	res, _ := json.Marshal(&d)
 	return res
 
+}
+
+func parseStripe(res string) string {
+	idx := strings.Index(res, ": ")
+	return res[idx+2:]
 }
 
 type Stripe struct {
