@@ -28,7 +28,7 @@ func generateError(f ebs_fields.PurchaseFields, status, message string, code int
 	return ebs_fields.GenericEBSResponseFields{
 		ResponseStatus:         status,
 		ResponseMessage:        message,
-		ResponseCode:           600,
+		ResponseCode:           code,
 		TerminalID:             f.TerminalID,
 		ClientID:               f.ClientID,
 		SystemTraceAuditNumber: 10,
