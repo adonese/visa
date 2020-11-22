@@ -26,6 +26,7 @@ var tranFee float32 = 1.5
 
 func generateError(f ebs_fields.PurchaseFields, message string, code int) ebs_fields.GenericEBSResponseFields {
 	return ebs_fields.GenericEBSResponseFields{
+		ResponseStatus:         message,
 		ResponseMessage:        message,
 		ResponseCode:           600,
 		TerminalID:             f.TerminalID,
@@ -34,7 +35,6 @@ func generateError(f ebs_fields.PurchaseFields, message string, code int) ebs_fi
 		TranAmount:             f.TranAmount,
 		TranDateTime:           f.TranDateTime,
 		PAN:                    "1234",
-		ResponseStatus:         "Failed",
 		TranCurrency:           "USD",
 		TranFee:                &tranFee,
 	}
@@ -46,6 +46,7 @@ func WorkingKey(w http.ResponseWriter, r *http.Request) {
 	successfull := map[string]ebs_fields.GenericEBSResponseFields{
 		"ebs_response": {
 			ResponseMessage: "Approval",
+			ResponseStatus:  "Successful",
 			ResponseCode:    0,
 			WorkingKey:      "2277898cef81413e",
 		},
@@ -59,7 +60,7 @@ func Purchase(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("content-type", "application/json")
 
 	successfull := map[string]ebs_fields.GenericEBSResponseFields{
-		"ebs_response": generateError(fields, "Successfull", 0),
+		"ebs_response": generateError(fields, "Successful", 0),
 	}
 	log.Printf("The response is: %v", string(toJSON(successfull)))
 	w.WriteHeader(http.StatusOK)
