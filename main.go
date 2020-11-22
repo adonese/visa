@@ -35,7 +35,7 @@ func generateError(f ebs_fields.PurchaseFields, status, message string, code int
 		SystemTraceAuditNumber: 10,
 		TranAmount:             f.TranAmount,
 		TranDateTime:           f.TranDateTime,
-		PAN:                    "1234",
+		PAN:                    f.Pan[13:],
 		TranCurrency:           "USD",
 		TranFee:                &tranFee,
 	}
