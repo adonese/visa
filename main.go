@@ -142,7 +142,7 @@ func Purchase(w http.ResponseWriter, r *http.Request) {
 
 	if res.StatusCode != http.StatusOK {
 		log.Printf("the response is: %v", string(resData))
-		verr := ebs_fields.ErrorDetails{Message: "Error", Details: generateError(fields, err.Error(), 600)}
+		verr := ebs_fields.ErrorDetails{Message: "Error", Details: generateError(fields, "Failed Transaction", 600)}
 		w.WriteHeader(http.StatusBadGateway)
 		w.Write(toJSON(verr))
 
