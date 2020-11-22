@@ -122,7 +122,7 @@ func Purchase(w http.ResponseWriter, r *http.Request) {
 
 	// Enaya server could be down.
 	if res.StatusCode == 500 {
-		verr := ebs_fields.ErrorDetails{Message: "EBS Error", Code: 600, Details: generateError(fields, "Enaya down", 600)}
+		verr := ebs_fields.ErrorDetails{Message: "EBS Error", Code: 600, Details: generateError(fields, "Visa Gateway is down", 600)}
 		log.Printf("The response is: %v", string(toJSON(verr)))
 		w.WriteHeader(http.StatusGatewayTimeout)
 		w.Write(toJSON(verr))
@@ -154,13 +154,12 @@ func Purchase(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if res.StatusCode != http.StatusOK {
+	if res.StatusCode == http.StatusBadRequest {
 		log.Printf("the response is: %v", string(resData))
-		verr := ebs_fields.ErrorDetails{Message: "EBS Error", Code: 600, Details: generateError(fields, "Failed Transaction", 600)}
+		verr := ebs_fields.ErrorDetails{Message: "EBS Error", Code: 600, Details: generateError(fields, response["messege"], 600)}
 		log.Printf("The response is: %v", string(toJSON(verr)))
 		w.WriteHeader(http.StatusBadGateway)
 		w.Write(toJSON(verr))
-
 		return
 	}
 
