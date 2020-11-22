@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	TMK = "E6FBFD2C914A155D" //Terminal master key
+	TMK = "E6FBFD2C914A155D" // TMK Terminal master key
 	TWK = "2277898cef81413e" // Terminal working key
 )
 
@@ -42,72 +42,101 @@ func Purchase(w http.ResponseWriter, r *http.Request) {
 
 	req, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		w.WriteHeader(http.StatusBadGateway)
+
 		verr := ebs_fields.ErrorDetails{Message: "Error", Details: ebs_fields.GenericEBSResponseFields{ResponseMessage: "Transaction Failed", ResponseCode: 600}}
+		w.WriteHeader(http.StatusBadGateway)
 		w.Write(toJSON(verr))
+
 		return
 	}
 	defer r.Body.Close()
 
 	if err := json.Unmarshal(req, &fields); err != nil {
 		log.Printf("Error in unmarshaling request: Error: %v", err)
-		w.WriteHeader(http.StatusBadGateway)
+
 		verr := ebs_fields.ErrorDetails{Message: "Error", Details: ebs_fields.GenericEBSResponseFields{ResponseMessage: "Transaction Failed", ResponseCode: 600}}
+		w.WriteHeader(http.StatusBadGateway)
 		w.Write(toJSON(verr))
+
 		return
 	}
 	pin, err := reversePIN(fields.Pin, fields.Pan)
 	if err != nil {
 		log.Printf("Error in PIN reverse: %v", err)
+
+		verr := ebs_fields.ErrorDetails{Message: "Error", Details: ebs_fields.GenericEBSResponseFields{ResponseMessage: err.Error(), ResponseCode: 600}}
 		w.WriteHeader(http.StatusBadGateway)
-		verr := ebs_fields.ErrorDetails{Message: "Error", Details: ebs_fields.GenericEBSResponseFields{ResponseMessage: "Transaction Failed", ResponseCode: 600}}
 		w.Write(toJSON(verr))
+
 		return
 	}
 	// CVV gonnaa be pin[1:]
 	stripe := Stripe{PAN: fields.Pan, Amount: int(fields.TranAmount), CVV: pin[1:], ExpDate: fields.Expdate}
 	payment, err := json.Marshal(&stripe)
 
+	log.Printf("Request to Stripe: %v", string(payment))
 	if err != nil {
 		log.Printf("Error in PIN marshalling request: %v", err)
-		w.WriteHeader(http.StatusBadGateway)
+
 		verr := ebs_fields.ErrorDetails{Message: "Error", Details: ebs_fields.GenericEBSResponseFields{ResponseMessage: "Transaction Failed", ResponseCode: 600}}
+		w.WriteHeader(http.StatusBadGateway)
 		w.Write(toJSON(verr))
+
 		return
 	}
 
 	res, err := http.Post("https://pay.int.merchant.enayatech.com/charge/", "application/json", bytes.NewBuffer(payment))
 	if err != nil {
 		log.Printf("Error in request to stripe: %v", err)
-		w.WriteHeader(http.StatusBadGateway)
+
 		verr := ebs_fields.ErrorDetails{Message: "Error", Details: ebs_fields.GenericEBSResponseFields{ResponseMessage: "Transaction Failed", ResponseCode: 600}}
+		w.WriteHeader(http.StatusBadGateway)
+		w.Write(toJSON(verr))
+
+		return
+	}
+
+	// Enaya server could be down.
+	if res.StatusCode == 500 {
+		verr := ebs_fields.ErrorDetails{Message: "Error", Details: ebs_fields.GenericEBSResponseFields{ResponseMessage: "Enaya is down", ResponseCode: 600}}
+		w.WriteHeader(http.StatusGatewayTimeout)
 		w.Write(toJSON(verr))
 	}
 
 	resData, err := ioutil.ReadAll(res.Body)
 	if err != nil {
-		log.Printf("Error in marshalling stripe response: %v", err)
-		w.WriteHeader(http.StatusBadGateway)
+		log.Printf("Error in marshalling stripe response: %v - Response: %v", err, string(resData))
+
 		verr := ebs_fields.ErrorDetails{Message: "Error", Details: ebs_fields.GenericEBSResponseFields{ResponseMessage: "Transaction Failed", ResponseCode: 600}}
+		w.WriteHeader(http.StatusBadGateway)
 		w.Write(toJSON(verr))
+
+		return
 	}
 
+	log.Printf("The status code is: %v", res.StatusCode)
 	defer res.Body.Close()
 	var response map[string]string
 	if err := json.Unmarshal(resData, &response); err != nil {
-		log.Printf("Error in marshalling stripe response: %v", err)
-		w.WriteHeader(http.StatusBadGateway)
+		log.Printf("Error in marshalling stripe response: %v - Response: %v", err, string(resData))
+
 		verr := ebs_fields.ErrorDetails{Message: "Error", Details: ebs_fields.GenericEBSResponseFields{ResponseMessage: "Transaction Failed", ResponseCode: 600}}
+		w.WriteHeader(http.StatusBadGateway)
 		w.Write(toJSON(verr))
+
+		return
 	}
 
 	if res.StatusCode != http.StatusOK {
+		log.Printf("the response is: %v", string(resData))
+		verr := ebs_fields.ErrorDetails{Message: "Error", Details: ebs_fields.GenericEBSResponseFields{ResponseMessage: response["messege"], ResponseCode: 600}}
 		w.WriteHeader(http.StatusBadGateway)
-		verr := ebs_fields.ErrorDetails{Message: "Error", Details: ebs_fields.GenericEBSResponseFields{ResponseMessage: response["message"], ResponseCode: 600}}
 		w.Write(toJSON(verr))
+
+		return
 	}
 	// Successfull response here
-	w.WriteHeader(http.StatusOK)
+
 	successfull := map[string]ebs_fields.GenericEBSResponseFields{
 		"ebs_response": {
 			ResponseMessage: "Approval",
@@ -115,7 +144,6 @@ func Purchase(w http.ResponseWriter, r *http.Request) {
 		},
 	}
 	w.Write(toJSON(successfull))
-
 }
 
 func toJSON(d interface{}) []byte {
@@ -146,10 +174,7 @@ func reversePIN(pinblock, pan string) (string, error) {
 
 		return "", err
 	}
-	if res.StatusCode != http.StatusOK {
-		log.Print("Failed request")
-		return "", errors.New("bad request")
-	}
+
 	resData, err := ioutil.ReadAll(res.Body)
 	if err != nil {
 		log.Printf("Error in reading python's response: %v", err)
@@ -161,6 +186,10 @@ func reversePIN(pinblock, pan string) (string, error) {
 	if err := json.Unmarshal(resData, &response); err != nil {
 		log.Printf("Error in reading python's response: %v", err)
 		return "", err
+	}
+	if res.StatusCode != http.StatusOK {
+		log.Print("Failed request")
+		return "", errors.New(response["message"])
 	}
 
 	return response["pin"], nil
