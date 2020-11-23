@@ -168,10 +168,10 @@ func Purchase(w http.ResponseWriter, r *http.Request) {
 
 	}
 
-	var successRes EnayaRes
+	var successRes EnayaResponse
 	if err := json.Unmarshal(resData, &successRes); err != nil {
 		log.Printf("Error in parsing new enaya: %v", err)
-		verr := ebs_fields.ErrorDetails{Message: "EBS Error", Code: 600, Details: generateError(fields, "Failed", parseStripe(v), 600)}
+		verr := ebs_fields.ErrorDetails{Message: "EBS Error", Code: 600, Details: generateError(fields, "Failed", err.Error(), 600)}
 		log.Printf("The response is: %v", string(toJSON(verr)))
 		w.WriteHeader(http.StatusBadGateway)
 		w.Write(toJSON(verr))
@@ -253,8 +253,8 @@ type customResponse struct {
 type EnayaResponse struct {
 	CardNumber string `json:"card_number"`
 	ExpirationDate string `json:"expiration_date"`
-	Amount string `json:"amount_in_sdg"`
-	AmountUSD string `json:"amount_USD"`
+	Amount float32 `json:"amount_in_sdg"`
+	AmountUSD float32 `json:"amount_USD"`
 	Country string `json:"country"`
 	Currency string `json:"currency"`
 	PaymentInfo PaymentInfo `json:"paymentinfo"`
