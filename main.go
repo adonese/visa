@@ -144,7 +144,10 @@ func Purchase(w http.ResponseWriter, r *http.Request) {
 	log.Printf("The status code is: %v", res.StatusCode)
 	defer res.Body.Close()
 	var response map[string]string
-	if err := json.Unmarshal(resData, &response); err != nil {
+	// This should only run *if* we are testing against 400
+	
+	if res.StatusCode == http.StatusBadRequest {
+		if err := json.Unmarshal(resData, &response); err != nil {
 		log.Printf("Error in marshalling stripe response: %v - Response: %v", err, string(resData))
 
 		verr := ebs_fields.ErrorDetails{Message: "EBS Error", Code: 600, Details: generateError(fields, "Failed", err.Error(), 600)}
@@ -154,8 +157,6 @@ func Purchase(w http.ResponseWriter, r *http.Request) {
 
 		return
 	}
-
-	if res.StatusCode == http.StatusBadRequest {
 		if v, ok := response["messege"]; ok {
 			log.Printf("the response is: %v", string(resData))
 			verr := ebs_fields.ErrorDetails{Message: "EBS Error", Code: 600, Details: generateError(fields, "Failed", parseStripe(v), 600)}
@@ -167,8 +168,19 @@ func Purchase(w http.ResponseWriter, r *http.Request) {
 
 	}
 
+	var successRes EnayaRes
+	if err := json.Unmarshal(resData, &successRes); err != nil {
+		log.Printf("Error in parsing new enaya: %v", err)
+		verr := ebs_fields.ErrorDetails{Message: "EBS Error", Code: 600, Details: generateError(fields, "Failed", parseStripe(v), 600)}
+		log.Printf("The response is: %v", string(toJSON(verr)))
+		w.WriteHeader(http.StatusBadGateway)
+		w.Write(toJSON(verr))
+		return
+	}
+	log.Printf("The successfull transaction is: %v", successRes)
+	
 	successfull := map[string]ebs_fields.GenericEBSResponseFields{
-		"ebs_response": generateError(fields, "Successful", "Successful", 0),
+		"ebs_response": generateError(fields, "Successful", successRes.PaymentInfo.Description, 0),
 	}
 	log.Printf("The response is: %v", string(toJSON(successfull)))
 	w.WriteHeader(http.StatusOK)
@@ -236,4 +248,45 @@ func reversePIN(pinblock, pan string) (string, error) {
 
 type customResponse struct {
 	PIN string `json:"pin"`
+}
+
+type EnayaResponse struct {
+	CardNumber string `json:"card_number"`
+	ExpirationDate string `json:"expiration_date"`
+	Amount string `json:"amount_in_sdg"`
+	AmountUSD string `json:"amount_USD"`
+	Country string `json:"country"`
+	Currency string `json:"currency"`
+	PaymentInfo PaymentInfo `json:"paymentinfo"`
+}
+	/*
+	{"card_number":"4032160009749603",
+	"expiration_date":"2406",
+	"amount_in_sdg":250.0,
+	"card_cvv":12,
+	"amount_USD":12.5,
+	"country":
+	"United States of America","currency":"USD",
+	"paymentinfo":{"id":"ch_1HqciJI3cm72eLmjOEU6YzY2",
+	"captured":true,
+	"created":true,
+	"currency":"usd",
+	"customer":null,
+	"description":"International chagre to  4032160009749603 by amount  12.5",
+	"paid":true,
+	"payment_method":"card_1HqciJI3cm72eLmjNwrbmbZn",
+	"refunded":false,
+	"status":"succeeded"}}
+	*/
+type PaymentInfo struct {
+	ID string `json:"id"`
+	Captured bool `json:"captured"`
+	Created bool `json:"created"`
+	Currency string `json:"currency"`
+	Customer *string `json:"customer"`
+	Description string `json:"description"`
+	Paid bool `json:"paid"`
+	PaymentMethod string `json:"payment_method"`
+	Refunded bool `json:"refunded"`
+	Status string `json:"status"`
 }
