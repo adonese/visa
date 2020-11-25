@@ -35,10 +35,17 @@ func generateError(f ebs_fields.PurchaseFields, status, message string, code int
 		SystemTraceAuditNumber: 10,
 		TranAmount:             f.TranAmount,
 		TranDateTime:           f.TranDateTime,
-		PAN:                    f.Pan[13:],
+		PAN:                    getLastPan(f.Pan),
 		TranCurrency:           "USD",
 		TranFee:                &tranFee,
 	}
+}
+
+func getLastPan(pan string) string {
+	if len(pan) >= 16 {
+		return pan[len(pan)-4:]
+	}
+	return pan
 }
 
 // WorkingKey static working key for visa purposes.
@@ -145,18 +152,18 @@ func Purchase(w http.ResponseWriter, r *http.Request) {
 	defer res.Body.Close()
 	var response map[string]string
 	// This should only run *if* we are testing against 400
-	
+
 	if res.StatusCode == http.StatusBadRequest {
 		if err := json.Unmarshal(resData, &response); err != nil {
-		log.Printf("Error in marshalling stripe response: %v - Response: %v", err, string(resData))
+			log.Printf("Error in marshalling stripe response: %v - Response: %v", err, string(resData))
 
-		verr := ebs_fields.ErrorDetails{Message: "EBS Error", Code: 600, Details: generateError(fields, "Failed", err.Error(), 600)}
-		log.Printf("The response is: %v", string(toJSON(verr)))
-		w.WriteHeader(http.StatusBadGateway)
-		w.Write(toJSON(verr))
+			verr := ebs_fields.ErrorDetails{Message: "EBS Error", Code: 600, Details: generateError(fields, "Failed", err.Error(), 600)}
+			log.Printf("The response is: %v", string(toJSON(verr)))
+			w.WriteHeader(http.StatusBadGateway)
+			w.Write(toJSON(verr))
 
-		return
-	}
+			return
+		}
 		if v, ok := response["messege"]; ok {
 			log.Printf("the response is: %v", string(resData))
 			verr := ebs_fields.ErrorDetails{Message: "EBS Error", Code: 600, Details: generateError(fields, "Failed", parseStripe(v), 600)}
@@ -178,7 +185,7 @@ func Purchase(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	log.Printf("The successfull transaction is: %v", successRes)
-	
+
 	successfull := map[string]ebs_fields.GenericEBSResponseFields{
 		"ebs_response": generateError(fields, "Successful", successRes.PaymentInfo.Description, 0),
 	}
@@ -251,15 +258,16 @@ type customResponse struct {
 }
 
 type EnayaResponse struct {
-	CardNumber string `json:"card_number"`
-	ExpirationDate string `json:"expiration_date"`
-	Amount float32 `json:"amount_in_sdg"`
-	AmountUSD float32 `json:"amount_USD"`
-	Country string `json:"country"`
-	Currency string `json:"currency"`
-	PaymentInfo PaymentInfo `json:"paymentinfo"`
+	CardNumber     string      `json:"card_number"`
+	ExpirationDate string      `json:"expiration_date"`
+	Amount         float32     `json:"amount_in_sdg"`
+	AmountUSD      float32     `json:"amount_USD"`
+	Country        string      `json:"country"`
+	Currency       string      `json:"currency"`
+	PaymentInfo    PaymentInfo `json:"paymentinfo"`
 }
-	/*
+
+/*
 	{"card_number":"4032160009749603",
 	"expiration_date":"2406",
 	"amount_in_sdg":250.0,
@@ -277,16 +285,16 @@ type EnayaResponse struct {
 	"payment_method":"card_1HqciJI3cm72eLmjNwrbmbZn",
 	"refunded":false,
 	"status":"succeeded"}}
-	*/
+*/
 type PaymentInfo struct {
-	ID string `json:"id"`
-	Captured bool `json:"captured"`
-	Created bool `json:"created"`
-	Currency string `json:"currency"`
-	Customer *string `json:"customer"`
-	Description string `json:"description"`
-	Paid bool `json:"paid"`
-	PaymentMethod string `json:"payment_method"`
-	Refunded bool `json:"refunded"`
-	Status string `json:"status"`
+	ID            string  `json:"id"`
+	Captured      bool    `json:"captured"`
+	Created       bool    `json:"created"`
+	Currency      string  `json:"currency"`
+	Customer      *string `json:"customer"`
+	Description   string  `json:"description"`
+	Paid          bool    `json:"paid"`
+	PaymentMethod string  `json:"payment_method"`
+	Refunded      bool    `json:"refunded"`
+	Status        string  `json:"status"`
 }
