@@ -6,8 +6,10 @@ import (
 	"errors"
 	"io/ioutil"
 	"log"
+	"math/rand"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/adonese/noebs/ebs_fields"
 )
@@ -32,7 +34,7 @@ func generateError(f ebs_fields.PurchaseFields, status, message string, code int
 		ResponseCode:           code,
 		TerminalID:             f.TerminalID,
 		ClientID:               f.ClientID,
-		SystemTraceAuditNumber: 10,
+		SystemTraceAuditNumber: generateInt(),
 		TranAmount:             f.TranAmount,
 		TranDateTime:           f.TranDateTime,
 		PAN:                    getLastPan(f.Pan),
@@ -46,6 +48,14 @@ func getLastPan(pan string) string {
 		return pan[len(pan)-4:]
 	}
 	return pan
+}
+
+func generateInt() int {
+	return rand.Intn(9999)
+}
+
+func init() {
+	rand.Seed(time.Now().UnixNano())
 }
 
 // WorkingKey static working key for visa purposes.
@@ -187,7 +197,7 @@ func Purchase(w http.ResponseWriter, r *http.Request) {
 	log.Printf("The successfull transaction is: %v", successRes)
 
 	successfull := map[string]ebs_fields.GenericEBSResponseFields{
-		"ebs_response": generateError(fields, "Successful", successRes.PaymentInfo.Description, 0),
+		"ebs_response": generateError(fields, "Successful", successRes.PaymentInfo.Status, 0),
 	}
 	log.Printf("The response is: %v", string(toJSON(successfull)))
 	w.WriteHeader(http.StatusOK)
@@ -201,6 +211,7 @@ func toJSON(d interface{}) []byte {
 
 }
 
+//parseStripe parses error response from Stripe
 func parseStripe(res string) string {
 	idx := strings.Index(res, ": ")
 	if idx == -1 {
@@ -286,6 +297,7 @@ type EnayaResponse struct {
 	"refunded":false,
 	"status":"succeeded"}}
 */
+
 type PaymentInfo struct {
 	ID            string  `json:"id"`
 	Captured      bool    `json:"captured"`
