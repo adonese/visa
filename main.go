@@ -144,6 +144,7 @@ func Purchase(w http.ResponseWriter, r *http.Request) {
 		log.Printf("The response is: %v", string(toJSON(verr)))
 		w.WriteHeader(http.StatusGatewayTimeout)
 		w.Write(toJSON(verr))
+		return
 	}
 
 	resData, err := ioutil.ReadAll(res.Body)
